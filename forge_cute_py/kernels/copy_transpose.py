@@ -2,12 +2,10 @@
 Tiled copy/transpose kernel using CuTe DSL.
 """
 
-import torch
+import cuda.bindings.driver as cuda
 import cutlass
 import cutlass.cute as cute
-import cutlass.torch as cutlass_torch
-from cutlass import Float16, Float32, BFloat16, const_expr
-from cutlass.cute.runtime import from_dlpack
+from cutlass import const_expr
 
 
 class CopyTranspose:
@@ -31,7 +29,7 @@ class CopyTranspose:
         self,
         input: cute.Tensor,
         output: cute.Tensor,
-        stream=None,
+        stream: cuda.CUstream = None,
     ):
         """
         Execute tiled transpose.
@@ -123,46 +121,3 @@ class CopyTranspose:
             # Read the element loaded by this thread
             val = tile_smem[ty, tx]
             output[out_row, out_col] = val
-
-
-def copy_transpose_cute(x: torch.Tensor, tile: int = 16) -> torch.Tensor:
-    """
-    Perform tiled transpose using CuTe DSL.
-
-    Args:
-        x: Input tensor of shape (M, N)
-        tile: Tile size (default: 16)
-
-    Returns:
-        Transposed tensor of shape (N, M)
-    """
-    if not x.is_cuda:
-        raise ValueError("Input must be a CUDA tensor")
-
-    if x.ndim != 2:
-        raise ValueError("Input must be a 2D tensor")
-
-    M, N = x.shape
-
-    # Create output tensor (transposed shape)
-    y = torch.empty((N, M), dtype=x.dtype, device=x.device)
-
-    # Map PyTorch dtype to CUTLASS dtype
-    dtype_map = {
-        torch.float16: Float16,
-        torch.float32: Float32,
-        torch.bfloat16: BFloat16,
-    }
-
-    if x.dtype not in dtype_map:
-        raise ValueError(f"Unsupported dtype: {x.dtype}")
-
-    cute_dtype = dtype_map[x.dtype]
-
-    # Create and run kernel
-    kernel = CopyTranspose(cute_dtype, tile_size=tile)
-    input_cute = from_dlpack(x, assumed_align=16).mark_layout_dynamic(leading_dim=1)
-    output_cute = from_dlpack(y, assumed_align=16).mark_layout_dynamic(leading_dim=1)
-    kernel(input_cute, output_cute, stream=cutlass_torch.current_stream())
-
-    return y

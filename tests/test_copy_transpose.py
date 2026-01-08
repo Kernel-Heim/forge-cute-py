@@ -1,25 +1,27 @@
 import pytest
+import torch
 
-from conftest import require_cuda
-
-
-def _copy_transpose_op(torch):
-    if not hasattr(torch.ops, "forge_cute_py") or not hasattr(
-        torch.ops.forge_cute_py, "copy_transpose"
-    ):
-        pytest.skip("torch.ops.forge_cute_py.copy_transpose not registered")
-    return torch.ops.forge_cute_py.copy_transpose
+from forge_cute_py.ops import copy_transpose
+from forge_cute_py.ref import copy_transpose as ref_copy_transpose
 
 
-@pytest.mark.parametrize("shape", [(4, 8), (16, 32)])
-@pytest.mark.parametrize("tile", [16, 32])
-@pytest.mark.parametrize("dtype", ["float16", "float32"])
-def test_copy_transpose_matches_reference(shape, tile, dtype):
-    torch = require_cuda()
-    op = _copy_transpose_op(torch)
-    x = torch.arange(0, shape[0] * shape[1], device="cuda", dtype=getattr(torch, dtype))
-    x = x.reshape(*shape)
-    y = op(x, tile)
-    y_ref = x.transpose(-2, -1).contiguous()
+@pytest.mark.parametrize("dtype", [torch.float32, torch.float16, torch.bfloat16])
+@pytest.mark.parametrize("shape", [(32, 64), (128, 256), (15, 37)])
+@pytest.mark.parametrize("tile_size", [16, 32])
+def test_copy_transpose_correctness(dtype, shape, tile_size):
+    torch.manual_seed(0)
+    x = torch.randn(shape, dtype=dtype, device="cuda")
+    y = copy_transpose(x, tile_size=tile_size)
+    y_ref = ref_copy_transpose(x)
     torch.testing.assert_close(y, y_ref)
-    assert torch.isfinite(y).all()
+
+
+@pytest.mark.parametrize("dtype", [torch.float32, torch.float16, torch.bfloat16])
+@pytest.mark.parametrize("shape", [(32, 64), (128, 256), (15, 37)])
+@pytest.mark.parametrize("tile_size", [16, 32])
+def test_copy_transpose_torch_ops(dtype, shape, tile_size):
+    torch.manual_seed(0)
+    x = torch.randn(shape, dtype=dtype, device="cuda")
+    y = torch.ops.forge_cute_py.copy_transpose(x, tile_size)
+    y_ref = ref_copy_transpose(x)
+    torch.testing.assert_close(y, y_ref)

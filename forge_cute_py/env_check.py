@@ -2,8 +2,7 @@ import sys
 
 import torch
 
-import forge_cute_py
-from forge_cute_py.ref import copy_transpose_ref
+from forge_cute_py.ref import copy_transpose as copy_transpose_ref
 
 
 def _print_env():

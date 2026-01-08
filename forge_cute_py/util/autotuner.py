@@ -6,7 +6,7 @@ import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import torch
 
@@ -21,9 +21,11 @@ def _get_home_dir() -> Path:
 
 
 def _default_cache_dir() -> Path:
-    env_override = os.getenv(f"{PACKAGE_NAME.upper()}_CACHE_DIR") or os.getenv(
-        "FORGE_CUTE_PY_CACHE_DIR"
-    ) or os.getenv("KERNELHEIM_CACHE_DIR")
+    env_override = (
+        os.getenv(f"{PACKAGE_NAME.upper()}_CACHE_DIR")
+        or os.getenv("FORGE_CUTE_PY_CACHE_DIR")
+        or os.getenv("KERNELHEIM_CACHE_DIR")
+    )
     if env_override:
         return Path(env_override)
     return _get_home_dir() / f".{PACKAGE_NAME}" / "cache"
@@ -113,6 +115,7 @@ class Autotuner:
         best_config = self.configs[0]
         best_time = float("inf")
         for config in self.configs:
+
             def call():
                 return self.fn(*args, **config.all_kwargs(), **kwargs)
 
