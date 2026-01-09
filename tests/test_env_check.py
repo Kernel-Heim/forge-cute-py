@@ -18,8 +18,4 @@ def test_env_check_module_runs():
         text=True,
     )
     if result.returncode != 0:
-        pytest.fail(
-            "env_check failed:\n"
-            f"stdout:\n{result.stdout}\n"
-            f"stderr:\n{result.stderr}\n"
-        )
+        pytest.fail(f"env_check failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}\n")

@@ -39,6 +39,19 @@ Current LLM policy (augmented from [nanochat](https://github.com/karpathy/nanoch
 
 *We will update this section as we stabilize the contribution process.*
 
+### Pre-commit hooks
+Please install hooks with `pre-commit` to ensure code quality checks run locally:
+
+```bash
+uv run pre-commit install
+```
+
+To run checks manually on all files (`-a` is equivalent to `--all-files`):
+
+```bash
+uv run pre-commit run -a
+```
+
 ### Development expectations
 - Keep PRs small and scoped to a single issue.
 - Include:
