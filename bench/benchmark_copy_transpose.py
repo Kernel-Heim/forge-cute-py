@@ -28,7 +28,7 @@ def main():
     op = torch.ops.forge_cute_py.copy_transpose
 
     def fn():
-        return op(x, args.tile)
+        return op(x, args.tile_size)
 
     times = do_bench(fn, warmup=args.warmup, rep=args.iterations)
     stats = summarize_times(times)

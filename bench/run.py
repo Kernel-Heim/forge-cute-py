@@ -6,7 +6,7 @@ from pathlib import Path
 import torch
 import yaml
 
-from forge_cute_py.util.bench import do_bench, summarize_times, estimate_bandwidth
+from forge_cute_py.util.bench import do_bench, estimate_bandwidth, summarize_times
 
 
 def _env_metadata():
@@ -69,11 +69,11 @@ def _bench_case(case, warmup: int, iterations: int):
     if op_name == "copy_transpose":
         if not hasattr(ops, "copy_transpose"):
             return {"status": "skipped", "reason": "copy_transpose not registered"}
-        tile = case.get("tile", 16)
+        tile_size = case.get("tile_size", 16)
         x = torch.randn(*shape, device="cuda", dtype=dtype)
 
         def fn():
-            return ops.copy_transpose(x, tile)
+            return ops.copy_transpose(x, tile_size)
 
         times = do_bench(fn, warmup=warmup, rep=iterations)
         stats = summarize_times(times)
@@ -84,7 +84,7 @@ def _bench_case(case, warmup: int, iterations: int):
             "op": op_name,
             "shape": shape,
             "dtype": str(dtype).replace("torch.", ""),
-            "tile": tile,
+            "tile_size": tile_size,
             "times_ms": stats,
             "bandwidth_gbps": bw,
         }
