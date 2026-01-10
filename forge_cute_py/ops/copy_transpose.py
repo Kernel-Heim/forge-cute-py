@@ -16,8 +16,10 @@ def _copy_transpose(x: torch.Tensor, tile_size: int = 16) -> torch.Tensor:
     Returns:
         Transposed tensor of shape (N, M)
     """
-    assert x.is_cuda, "Input must be a CUDA tensor"
-    assert x.ndim == 2, "Input must be a 2D tensor"
+    if not x.is_cuda:
+        raise NotImplementedError("copy_transpose is CUDA-only")
+    if x.ndim != 2:
+        raise ValueError("copy_transpose expects a 2D tensor")
 
     M, N = x.shape
 
@@ -31,7 +33,8 @@ def _copy_transpose(x: torch.Tensor, tile_size: int = 16) -> torch.Tensor:
         torch.bfloat16: BFloat16,
     }
 
-    assert x.dtype in dtype_map, f"Unsupported dtype: {x.dtype}"
+    if x.dtype not in dtype_map:
+        raise ValueError(f"Unsupported dtype: {x.dtype}")
 
     cute_dtype = dtype_map[x.dtype]
 

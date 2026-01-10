@@ -6,7 +6,7 @@ suites:
       - op: copy_transpose
         shape: [1024, 1024]
         dtype: float16
-        tile: 16
+        tile_size: 16
       - op: reduce_sum
         shape: [1024, 1024]
         dtype: float16

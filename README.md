@@ -90,7 +90,7 @@ ncu --set full -o profiles/copy_transpose_profile \
 
 | Op | Status | Variants | Notes |
 | --- | --- | --- | --- |
-| copy_transpose | Implemented | tile=16/32 | CuTe DSL kernel in `forge_cute_py/kernels/copy_transpose.py` |
+| copy_transpose | Implemented | tile_size=16/32 | CuTe DSL kernel in `forge_cute_py/kernels/copy_transpose.py` |
 | reduce_sum | Stub (ref) | naive/improved/shfl | CUDA path currently uses reference; kernel to be implemented |
 | softmax_online | Stub (ref) | single-pass | CUDA path currently uses reference; kernel to be implemented |
 

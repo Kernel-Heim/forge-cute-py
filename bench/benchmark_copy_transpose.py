@@ -2,7 +2,7 @@ import argparse
 
 import torch
 
-from forge_cute_py.util.bench import do_bench, summarize_times, estimate_bandwidth
+from forge_cute_py.util.bench import do_bench, estimate_bandwidth, summarize_times
 
 
 def main():
@@ -10,7 +10,7 @@ def main():
     parser.add_argument("--m", type=int, default=1024)
     parser.add_argument("--n", type=int, default=1024)
     parser.add_argument("--dtype", choices=["float16", "bfloat16", "float32"], default="float16")
-    parser.add_argument("--tile", type=int, default=16)
+    parser.add_argument("--tile-size", type=int, default=16)
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--iterations", type=int, default=100)
     parser.add_argument("--compile-ref", action="store_true")
