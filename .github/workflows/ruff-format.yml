@@ -1,0 +1,19 @@
+name: Ruff Format
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Ruff format 
+      - uses: astral-sh/ruff-action@v3
+        with:
+          args: "format --check --diff"
+
+
