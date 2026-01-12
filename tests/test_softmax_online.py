@@ -88,3 +88,92 @@ def test_softmax_online_extreme_values(input_dtype):
     out_mixed = softmax_online(x_mixed, -1)
     assert (out_mixed[:, 0] > 0.99).all()
     assert (out_mixed[:, 1:] < 0.01).all()
+
+
+@pytest.mark.parametrize("shape", [(4, 8), (16, 128), (32, 256)])
+@pytest.mark.parametrize("dim", [-1, 0, 1])
+@pytest.mark.parametrize(
+    "dtype, atol, rtol",
+    [
+        (torch.bfloat16, 1e-2, 1e-2),
+        (torch.float16, 1e-3, 1e-3),
+        (torch.float32, 1e-4, 1e-4),
+    ],
+)
+def test_softmax_online_backward(shape, dim, dtype, atol, rtol):
+    """Test backward pass against PyTorch reference."""
+    # Create inputs with gradients enabled (scale by 0.1 to avoid overflow)
+    x = (0.1 * torch.randn(*shape, device="cuda", dtype=dtype)).requires_grad_(True)
+    x_ref = x.detach().clone().requires_grad_(True)
+
+    # Forward pass
+    out = softmax_online(x, dim=dim)
+    out_ref = ref_softmax_online(x_ref, dim=dim)
+    torch.testing.assert_close(out, out_ref, atol=atol, rtol=rtol)
+
+    # Backward pass
+    dy = torch.randn_like(out)
+    torch.cuda.synchronize()  # Critical: prevents autograd timing issues
+    (dx,) = torch.autograd.grad(out, x, grad_outputs=dy)
+    (dx_ref,) = torch.autograd.grad(out_ref, x_ref, grad_outputs=dy)
+    torch.testing.assert_close(dx, dx_ref, atol=atol, rtol=rtol)
+
+
+@pytest.mark.parametrize("shape", [(4, 8), (16, 128)])
+@pytest.mark.parametrize("dim", [-1, 1])
+@pytest.mark.parametrize("dtype", [torch.float16, torch.float32])
+def test_softmax_online_backward_torch_compile(shape, dim, dtype):
+    """Test backward pass works with torch.compile."""
+    unsupported_exc = ()
+    try:
+        from torch._dynamo.exc import Unsupported as DynamoUnsupported
+
+        unsupported_exc = (DynamoUnsupported,)
+    except Exception:
+        unsupported_exc = ()
+
+    try:
+        compiled = torch.compile(softmax_online, fullgraph=True)
+    except Exception as exc:
+        pytest.skip(f"torch.compile not available: {exc}")
+
+    # Create inputs
+    x = (0.1 * torch.randn(*shape, device="cuda", dtype=dtype)).requires_grad_(True)
+    x_ref = x.detach().clone().requires_grad_(True)
+
+    # Forward + backward (compiled)
+    try:
+        y = compiled(x, dim=dim)
+    except unsupported_exc as exc:
+        pytest.skip(f"torch.compile unsupported: {exc}")
+
+    dy = torch.randn_like(y)
+    torch.cuda.synchronize()
+    (dx,) = torch.autograd.grad(y, x, grad_outputs=dy)
+
+    # Forward + backward (reference)
+    y_ref = ref_softmax_online(x_ref, dim=dim)
+    torch.cuda.synchronize()
+    (dx_ref,) = torch.autograd.grad(y_ref, x_ref, grad_outputs=dy)
+
+    # Check gradients
+    atol, rtol = (1e-2, 1e-2) if dtype == torch.float16 else (1e-4, 1e-4)
+    torch.testing.assert_close(dx, dx_ref, atol=atol, rtol=rtol)
+
+
+def test_softmax_online_gradient_properties():
+    """Test mathematical properties of softmax gradients."""
+    m, n = 16, 128
+
+    # Test property: gradient of uniform upstream should have zero row/col sum
+    x = torch.randn(m, n, device="cuda", dtype=torch.float32, requires_grad=True)
+    y = softmax_online(x, dim=-1)
+
+    # Uniform upstream gradient
+    dy_uniform = torch.ones_like(y)
+    torch.cuda.synchronize()
+    (dx,) = torch.autograd.grad(y, x, grad_outputs=dy_uniform)
+
+    # Row sums should be approximately zero (softmax Jacobian property)
+    row_sums = dx.sum(dim=-1)
+    torch.testing.assert_close(row_sums, torch.zeros_like(row_sums), atol=1e-6, rtol=1e-6)
