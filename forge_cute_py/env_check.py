@@ -2,6 +2,7 @@ import sys
 
 import torch
 
+from forge_cute_py.ops import copy_transpose
 from forge_cute_py.ref import copy_transpose as copy_transpose_ref
 
 
@@ -27,12 +28,8 @@ def _check_cute_import():
 
 
 def _check_copy_transpose():
-    if not hasattr(torch.ops, "forge_cute_py") or not hasattr(
-        torch.ops.forge_cute_py, "copy_transpose"
-    ):
-        raise RuntimeError("torch.ops.forge_cute_py.copy_transpose not registered")
     x = torch.arange(0, 16, device="cuda", dtype=torch.float32).reshape(4, 4)
-    y = torch.ops.forge_cute_py.copy_transpose(x, 16)
+    y = copy_transpose(x, 16)
     y_ref = copy_transpose_ref(x)
     torch.testing.assert_close(y, y_ref)
     print("copy_transpose: ok")
