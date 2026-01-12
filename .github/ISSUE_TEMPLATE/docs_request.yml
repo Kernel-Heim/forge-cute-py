@@ -1,0 +1,70 @@
+name: Documentation Request
+description: Request documentation improvements or additions
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve our documentation!
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What documentation is missing or needs improvement?
+      placeholder: The copy_transpose API doesn't explain what tile_size does
+    validations:
+      required: true
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Documentation Type
+      description: What kind of documentation is needed?
+      options:
+        - "API documentation (docstrings)"
+        - "User guide / tutorial"
+        - "Developer guide / contributing"
+        - "README / getting started"
+        - "Code comments / inline docs"
+        - "Other"
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: Which file, function, or section needs documentation?
+      placeholder: "forge_cute_py/ops/copy_transpose.py:59"
+    validations:
+      required: false
+
+  - type: textarea
+    id: current-state
+    attributes:
+      label: Current State
+      description: What's currently documented (if anything)?
+      placeholder: 'Currently just says "Tile size for blocking (default: 16)" but doesn''t explain impact'
+    validations:
+      required: false
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed Documentation
+      description: What should the documentation say? (optional draft)
+      placeholder: |
+        tile_size: Block size for tiled transpose (default: 16)
+            Larger tiles improve cache locality but require more shared memory.
+            Must be a power of 2. Recommended values: 16 (default), 32.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other relevant information or examples
+    validations:
+      required: false

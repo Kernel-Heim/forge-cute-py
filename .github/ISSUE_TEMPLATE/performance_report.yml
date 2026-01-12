@@ -1,0 +1,122 @@
+name: Performance / Benchmarking Report
+description: Report performance issues, regressions, or share benchmark results
+labels: ["performance"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting performance data! This helps us track regressions and improvements.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Brief description of the performance issue or finding
+      placeholder: copy_transpose is 2x slower than expected on RTX 4090
+    validations:
+      required: true
+
+  - type: dropdown
+    id: report-type
+    attributes:
+      label: Report Type
+      description: What kind of performance report is this?
+      options:
+        - "Performance regression (slower than before)"
+        - "Performance issue (slower than expected)"
+        - "Benchmark results (informational)"
+        - "Performance improvement suggestion"
+    validations:
+      required: true
+
+  - type: input
+    id: op-name
+    attributes:
+      label: Operation Name
+      description: Which op was benchmarked?
+      placeholder: copy_transpose, reduce_sum, softmax_online
+    validations:
+      required: true
+
+  - type: textarea
+    id: benchmark-command
+    attributes:
+      label: Benchmark Command
+      description: How did you run the benchmark?
+      placeholder: |
+        ```bash
+        uv run python -m forge_cute_py.bench copy_transpose --shape 1024,1024 --dtype float16
+        ```
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: results
+    attributes:
+      label: Benchmark Results
+      description: Paste the benchmark output or performance numbers
+      placeholder: |
+        copy_transpose: 0.123 ms (8.5 GB/s)
+        torch.t: 0.089 ms (11.7 GB/s)
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-perf
+    attributes:
+      label: Expected Performance
+      description: What performance did you expect? Include baseline or reference numbers if available.
+      placeholder: Expected ~0.09 ms based on memory bandwidth calculations
+    validations:
+      required: false
+
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU Model
+      placeholder: "NVIDIA RTX 4090, A100, H100"
+    validations:
+      required: true
+
+  - type: input
+    id: driver
+    attributes:
+      label: NVIDIA Driver Version
+      placeholder: "nvidia-smi output"
+    validations:
+      required: true
+
+  - type: input
+    id: cuda
+    attributes:
+      label: CUDA Toolkit Version
+      placeholder: "nvcc --version output"
+    validations:
+      required: true
+
+  - type: input
+    id: pytorch
+    attributes:
+      label: PyTorch Version
+      placeholder: "python -c 'import torch; print(torch.__version__)' output"
+    validations:
+      required: true
+
+  - type: textarea
+    id: profiling
+    attributes:
+      label: Profiling Data
+      description: ncu/nsys report, kernel metrics, etc. (optional)
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other relevant information
+    validations:
+      required: false

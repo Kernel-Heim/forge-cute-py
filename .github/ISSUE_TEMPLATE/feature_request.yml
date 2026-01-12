@@ -1,0 +1,76 @@
+name: Feature Request
+description: Propose a new kernel, benchmark, or workflow improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing a new feature! Please provide the following information.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What should be added or improved?
+      placeholder: Describe the feature at a high level
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation / Use Case
+      description: Why is this needed? Include any target models or workloads.
+      placeholder: This would enable X use case / improve Y workflow
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: |
+        Describe the API and expected behavior. If this is a kernel, specify:
+        - op name and semantics
+        - supported dtypes/shapes
+        - expected variants (tile sizes, dim/axis, etc.)
+
+        If relevant, include a sketch of the test/benchmark additions.
+      placeholder: |
+        API:
+        ```python
+        def my_op(x: torch.Tensor, ...) -> torch.Tensor:
+            ...
+        ```
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope Alignment
+      description: Does this align with the v0.1 scope (Weeks 0-2) or is it a future request?
+      options:
+        - "v0.1 scope (Weeks 0-2)"
+        - "Future request (post-v0.1)"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: List other approaches or existing libraries (if any)
+      placeholder: We could also use library X, but it doesn't support Y
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Links, papers, or references
+      placeholder: https://arxiv.org/abs/...
+    validations:
+      required: false
