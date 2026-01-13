@@ -75,6 +75,57 @@ A change that affects kernels or harness behavior should include:
   - Bench results (before/after) if relevant
 
 
+## Versioning and releases
+
+`forge-cute-py` follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (SemVer):
+- **MAJOR** (x.0.0): Incompatible API changes
+- **MINOR** (0.x.0): New functionality, backwards-compatible
+- **PATCH** (0.0.x): Backwards-compatible bug fixes
+
+### Version 0.1.0 (current)
+
+The project is currently in `v0.1.0` development:
+- Focused on harness stabilization and Week 0-2 kernel implementations
+- Not yet tagged - will be tagged when v0.1.0 milestones are complete
+- See [ROADMAP.md](ROADMAP.md) for detailed progress tracking
+
+### Release process (for maintainers)
+
+When ready to create a release:
+
+1. **Update CHANGELOG.md**:
+   - Move items from `[Unreleased]` to a new version section
+   - Add release date: `## [0.1.0] - YYYY-MM-DD`
+   - Update compare links at bottom
+
+2. **Update version in pyproject.toml**:
+   ```toml
+   version = "0.1.0"
+   ```
+
+3. **Create and push git tag**:
+   ```bash
+   git tag -a v0.1.0 -m "Release v0.1.0: KernelHeim Weeks 0-2 harness"
+   git push origin v0.1.0
+   ```
+
+4. **Create GitHub release**:
+   - Use tag `v0.1.0`
+   - Copy relevant CHANGELOG section as release notes
+   - Mark as pre-release if appropriate
+
+### Version location reference
+
+The single source of truth for version is `pyproject.toml`:
+```toml
+[project]
+version = "0.1.0"
+```
+
+Git tags should match: `v0.1.0` (with `v` prefix).
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed change history.
+
 ## Code of Conduct
 
 Be respectful and constructive. Harassment and abuse are not tolerated.

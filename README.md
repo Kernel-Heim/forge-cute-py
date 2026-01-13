@@ -63,13 +63,16 @@ Run a single op in Python:
 ```bash
 uv run python - <<'PY'
 import torch
-import forge_cute_py
+from forge_cute_py import copy_transpose
 
 x = torch.randn(1024, 1024, device="cuda", dtype=torch.float16)
-y = torch.ops.forge_cute_py.copy_transpose(x, 16)
-print(y.shape)
+y = copy_transpose(x, tile_size=16)
+print(y.shape)  # torch.Size([1024, 1024])
 PY
 ```
+
+Ops are also accessible via `torch.ops.forge_cute_py._op_name()` for custom op
+integration.
 
 Run a smoke benchmark suite (JSON output):
 
@@ -102,9 +105,9 @@ ncu --set full -o profiles/copy_transpose uv run python bench/benchmark_copy_tra
 
 | Op | Status | Variants | Notes |
 | --- | --- | --- | --- |
-| copy_transpose | Implemented | tile_size=16/32 | CuTe DSL kernel in `forge_cute_py/kernels/copy_transpose.py` |
-| reduce_sum | Stub (ref) | naive/improved/shfl | CUDA path currently uses reference; kernel to be implemented |
-| softmax_online | Stub (ref) | single-pass | CUDA path currently uses reference; kernel to be implemented |
+| copy_transpose | Implemented | tile_size=16/32 | CuTe DSL kernel with tiled shared memory |
+| reduce_sum | Stub (ref) | naive/improved/shfl | Uses PyTorch reference; kernel to be implemented |
+| softmax_online | Stub (ref) | single-pass | Uses PyTorch reference with autograd support; kernel to be implemented |
 
 ---
 
@@ -162,6 +165,10 @@ uv run python bench/benchmark_copy_transpose.py       # Standalone benchmark
 **Note:** We are not accepting unsolicited pull requests during v0 stabilization. Please open an issue first and wait for maintainer approval before starting work.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full details.
+
+For kernel development workflow and architecture details, see:
+- [DEVELOPMENT.md](DEVELOPMENT.md) - Kernel development guide
+- [CLAUDE.md](CLAUDE.md) - AI assistant integration guide
 
 ---
 
