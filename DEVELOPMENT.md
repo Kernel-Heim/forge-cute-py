@@ -104,8 +104,18 @@ Key constraints to keep in mind:
 ## Testing and correctness
 
 ```bash
+# Run all tests
 uv run pytest -q
-uv run pytest tests/test_copy_transpose.py::test_copy_transpose_correctness -k "float16"
+
+# Run specific test file
+uv run pytest tests/test_copy_transpose.py
+
+# Run specific test function
+uv run pytest tests/test_copy_transpose.py::test_copy_transpose_correctness
+
+# Filter tests by name pattern with -k (matches test function names)
+uv run pytest tests/test_softmax_online.py -k correctness
+uv run pytest -k "not correctness and not compile"
 ```
 
 Correctness is the primary gate. Use explicit tolerances and document any

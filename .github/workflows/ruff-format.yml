@@ -5,16 +5,23 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ruff-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   format:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
 
       - name: Ruff check
-        uses: astral-sh/ruff-action@v3
+        uses: astral-sh/ruff-action@57714a7c8a2e59f32539362ba31877a1957dded1
       - name: Ruff format
         run: ruff format --check --diff
-
 
