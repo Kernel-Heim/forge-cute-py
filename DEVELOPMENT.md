@@ -141,6 +141,48 @@ Add new benchmark cases to `bench/suites.yaml` and keep outputs reproducible.
 Nsight Compute with `--set full` can be slow; use lighter sets if needed
 (`--set=launchstats`, `--section=SpeedOfLight`, etc.).
 
+### Metric extraction
+
+Extract curated metrics from NCU reports using the `--extract` flag or standalone:
+
+```bash
+# Automatic extraction after profiling
+./scripts/profile.sh ncu --extract -- uv run python bench/benchmark_copy_transpose.py
+
+# Standalone extraction from existing report
+./scripts/ncu_extract.py profiles/ncu_*.ncu-rep
+
+# JSON output
+./scripts/ncu_extract.py profiles/ncu_*.ncu-rep --json
+
+# Filter by kernel name
+./scripts/ncu_extract.py profiles/ncu_*.ncu-rep --kernel "CopyTranspose"
+```
+
+Output includes three metric categories:
+- **GPU Throughput**: Memory and Compute (SM) utilization percentages
+- **Pipe Utilization**: Tensor Core, FMA, ALU activity
+- **Warp Stalls**: Long scoreboard, barrier, memory throttle stalls
+
+### Profiling tips
+
+**For NCU profiling**, use minimal iterations since you're analyzing kernel behavior, not
+timing variance. The L2 cache flush adds extra kernel launches per iteration.
+
+```bash
+# Fast profiling (recommended)
+./scripts/profile.sh ncu --extract -- uv run python bench/benchmark_copy_transpose.py --warmup 2 --iterations 1
+
+# Profile only your kernel (skip reference kernels)
+./scripts/profile.sh ncu --kernel-name "copy_transpose" --extract -- uv run python bench/benchmark_copy_transpose.py
+```
+
+| Goal | Warmup | Iterations | Notes |
+|------|--------|------------|-------|
+| Timing benchmarks | 10 | 100 | Default, good for stable p50/p90 |
+| Quick profiling | 2 | 1-3 | Sufficient for kernel analysis |
+| Deep profiling (`--set full`) | 1 | 1 | Full metrics are slow |
+
 ## Linting and formatting
 
 ```bash
