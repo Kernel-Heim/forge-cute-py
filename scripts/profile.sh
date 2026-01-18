@@ -21,10 +21,15 @@ TOOLS:
   nsys              Nsight Systems (system-wide profiling)
   sanitizer         compute-sanitizer (memory/race detection)
 
+NCU OPTIONS:
+  --extract         Extract curated metrics after profiling (GPU throughput,
+                    pipe utilization, warp stalls)
+
 EXAMPLES:
   # Profile with Nsight Compute (detailed kernel metrics)
   $0 ncu -- python -m forge_cute_py.env_check
   $0 ncu --set full -- python bench/benchmark_copy_transpose.py
+  $0 ncu --extract -- python bench/benchmark_copy_transpose.py
 
   # Profile with Nsight Systems (timeline view)
   $0 nsys -- python -m forge_cute_py.env_check
@@ -55,8 +60,13 @@ shift
 
 # Parse options until we hit --
 TOOL_OPTS=()
+EXTRACT_METRICS=false
 while [[ $# -gt 0 ]] && [[ "$1" != "--" ]]; do
-    TOOL_OPTS+=("$1")
+    if [[ "$1" == "--extract" ]]; then
+        EXTRACT_METRICS=true
+    else
+        TOOL_OPTS+=("$1")
+    fi
     shift
 done
 
@@ -86,6 +96,13 @@ case "${TOOL}" in
         ncu "${TOOL_OPTS[@]}" -o "${OUTPUT_FILE}" "${COMMAND[@]}"
         echo "✓ Profile saved to: ${OUTPUT_FILE}.ncu-rep"
         echo "  View with: ncu-ui ${OUTPUT_FILE}.ncu-rep"
+        
+        # Extract metrics if requested
+        if [[ "${EXTRACT_METRICS}" == "true" ]]; then
+            echo ""
+            echo "Extracting curated metrics..."
+            "${SCRIPT_DIR}/ncu_extract.py" "${OUTPUT_FILE}.ncu-rep"
+        fi
         ;;
 
     nsys)

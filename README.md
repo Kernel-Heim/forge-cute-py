@@ -90,7 +90,7 @@ Profile a kernel with helper script:
 
 ```bash
 ./scripts/profile.sh ncu -- uv run python bench/benchmark_copy_transpose.py
-./scripts/profile.sh nsys -- uv run pytest tests/test_copy_transpose.py -k "tile_size=16"
+./scripts/profile.sh nsys -- uv run pytest tests/test_copy_transpose.py
 ```
 
 Or use profiling tools directly:
@@ -140,7 +140,7 @@ uv run python -m forge_cute_py.env_check  # Verify CUDA/PyTorch setup
 ```bash
 uv run pytest -q                                      # Run all tests
 uv run pytest tests/test_copy_transpose.py            # Run specific test file
-uv run pytest -k "float16 and tile_size=16"           # Run filtered tests
+uv run pytest -k correctness                          # Filter by test name pattern
 uv run pre-commit run --all-files                     # Run linting/formatting
 ```
 
