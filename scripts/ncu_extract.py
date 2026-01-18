@@ -32,22 +32,48 @@ METRIC_CONFIGS = {
         ("Compute (SM) [%]", ["sm__throughput.avg.pct_of_peak_sustained_elapsed"], "%"),
     ],
     "pipe_utilization": [
-        ("Tensor Core", ["sm__pipe_tensor_cycles_active.avg.pct_of_peak_sustained_active",
-                         "sm__pipe_tensor_op_hmma_cycles_active.avg.pct_of_peak_sustained_active"], "%"),
+        (
+            "Tensor Core",
+            [
+                "sm__pipe_tensor_cycles_active.avg.pct_of_peak_sustained_active",
+                "sm__pipe_tensor_op_hmma_cycles_active.avg.pct_of_peak_sustained_active",
+            ],
+            "%",
+        ),
         ("FMA", ["sm__pipe_fma_cycles_active.avg.pct_of_peak_sustained_active"], "%"),
         ("ALU", ["sm__pipe_alu_cycles_active.avg.pct_of_peak_sustained_active"], "%"),
         ("FP64", ["sm__pipe_fp64_cycles_active.avg.pct_of_peak_sustained_active"], "%"),
         ("Shared Memory", ["sm__pipe_shared_cycles_active.avg.pct_of_peak_sustained_active"], "%"),
     ],
     "warp_stalls": [
-        ("Stall Long Scoreboard", ["smsp__warps_issue_stalled_long_scoreboard_per_issue_active.ratio"], "inst"),
+        (
+            "Stall Long Scoreboard",
+            ["smsp__warps_issue_stalled_long_scoreboard_per_issue_active.ratio"],
+            "inst",
+        ),
         ("Stall Wait", ["smsp__warps_issue_stalled_wait_per_issue_active.ratio"], "inst"),
-        ("Stall Short Scoreboard", ["smsp__warps_issue_stalled_short_scoreboard_per_issue_active.ratio"], "inst"),
+        (
+            "Stall Short Scoreboard",
+            ["smsp__warps_issue_stalled_short_scoreboard_per_issue_active.ratio"],
+            "inst",
+        ),
         ("Stall Barrier", ["smsp__warps_issue_stalled_barrier_per_issue_active.ratio"], "inst"),
-        ("Stall Memory Throttle", ["smsp__warps_issue_stalled_membar_per_issue_active.ratio",
-                                    "smsp__warps_issue_stalled_drain_per_issue_active.ratio"], "inst"),
-        ("Selected", ["smsp__warps_issue_stalled_selected_per_issue_active.ratio",
-                      "smsp__issue_active.avg.per_cycle_active"], "inst"),
+        (
+            "Stall Memory Throttle",
+            [
+                "smsp__warps_issue_stalled_membar_per_issue_active.ratio",
+                "smsp__warps_issue_stalled_drain_per_issue_active.ratio",
+            ],
+            "inst",
+        ),
+        (
+            "Selected",
+            [
+                "smsp__warps_issue_stalled_selected_per_issue_active.ratio",
+                "smsp__issue_active.avg.per_cycle_active",
+            ],
+            "inst",
+        ),
     ],
 }
 
@@ -97,9 +123,11 @@ def extract_raw_metrics(ncu_rep_path: Path, kernel_filter: str | None = None) ->
     """
     cmd = [
         "ncu",
-        "--import", str(ncu_rep_path),
+        "--import",
+        str(ncu_rep_path),
         "--csv",
-        "--page", "raw",
+        "--page",
+        "raw",
     ]
 
     if kernel_filter:
@@ -147,9 +175,7 @@ def find_metric_value(
     return None
 
 
-def process_metrics(
-    raw_rows: list[dict], available_metrics: set[str]
-) -> list[KernelMetrics]:
+def process_metrics(raw_rows: list[dict], available_metrics: set[str]) -> list[KernelMetrics]:
     """Process raw NCU output into structured kernel metrics."""
     # Group rows by kernel name
     kernels: dict[str, KernelMetrics] = {}
@@ -210,7 +236,7 @@ def print_table(title: str, data: dict[str, float], unit: str) -> None:
 def print_metrics(kernel_metrics: list[KernelMetrics]) -> None:
     """Print metrics in human-readable table format."""
     for km in kernel_metrics:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Kernel: {km.kernel_name}")
         print("=" * 60)
 
@@ -223,12 +249,14 @@ def print_json(kernel_metrics: list[KernelMetrics]) -> None:
     """Print metrics as JSON."""
     output = []
     for km in kernel_metrics:
-        output.append({
-            "kernel_name": km.kernel_name,
-            "gpu_throughput": km.gpu_throughput,
-            "pipe_utilization": km.pipe_utilization,
-            "warp_stalls": km.warp_stalls,
-        })
+        output.append(
+            {
+                "kernel_name": km.kernel_name,
+                "gpu_throughput": km.gpu_throughput,
+                "pipe_utilization": km.pipe_utilization,
+                "warp_stalls": km.warp_stalls,
+            }
+        )
     print(json.dumps(output, indent=2))
 
 
