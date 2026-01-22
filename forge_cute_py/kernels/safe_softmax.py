@@ -18,9 +18,9 @@ class SafeSoftmax:
     @cute.jit
     def _row_reduce(self, val: cute.Numeric, op: Callable, init_val: cute.Numeric):
         """
-        Performs a reduction across a row using threads_per_row threads (8 warps).
+        Performs a reduction across a row using `threads_per_row` threads (`warps_per_row` warps).
         """
-        # Warp reduce: 32 threads -> 1 val each warp, ttl 8 vals
+        # Warp Reduction: 32 threads -> 1 val each warp, ttl 8 vals
         val = cute.arch.warp_reduction(val, op, threads_in_group=cute.arch.WARP_SIZE)
 
         # Block Reduction: 8 warps per row -> 8 vals in smem as reduction buffer
