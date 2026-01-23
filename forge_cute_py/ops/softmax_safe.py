@@ -16,11 +16,11 @@ def _safe_softmax_fwd(x: torch.Tensor, out: torch.Tensor, dim: int = -1, N=1024,
     """
     assert x.dim() == 2, "Input must be 2D"
     assert x.is_cuda, "Tensor must be on CUDA device"
-    assert x.dtype in [torch.float16, torch.bfloat16, torch.float32, torch.float64], (
+    assert x.dtype in [torch.float32], (
         "Unsupported dtype"
     )
     assert out.shape == x.shape, "Output shape must match input"
-    assert N == 1024, "Only supported for N=1024"
+    assert N == 1024, "Only supported shape: N=1024"
     assert threads_per_row == 256, "Only supported for threads_per_row=256"
     # Normalize dim to positive index
     dim = dim if dim >= 0 else x.ndim + dim
@@ -85,7 +85,7 @@ def _safe_softmax_backward(dy: torch.Tensor, y: torch.Tensor, dx: torch.Tensor, 
     assert dy.shape == y.shape == dx.shape, "All tensors must have same shape"
     assert dy.is_cuda and y.is_cuda, "Tensors must be on CUDA"
     assert dy.dtype == y.dtype, "dy and y must have same dtype"
-    assert dy.dtype in [torch.float16, torch.bfloat16, torch.float32, torch.float64], (
+    assert dy.dtype in [torch.float32], (
         "Unsupported dtype"
     )
 
