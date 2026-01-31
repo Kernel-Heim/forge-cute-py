@@ -20,6 +20,7 @@ _reduce_sum_last_cache = {}
 _reduce_sum_first_cache = {}
 
 
+# old just for future reference
 @dsl_user_op
 def atomicAddF32(dst_ptr: cute.Pointer, val: cute.Float32, loc=None, ip=None) -> cute.Float32:
     return nvvm.atomicrmw(
@@ -34,106 +35,69 @@ def atomicAddF32(dst_ptr: cute.Pointer, val: cute.Float32, loc=None, ip=None) ->
     )
 
 
-@cute.kernel
-def og_reduce_sum_kernel_last(input: cute.Tensor, output: cute.Tensor, num_warps: int):
-    smem_alloc = cutlass.utils.SmemAllocator()
-    smem_layout = cute.make_layout((32,))
-    shmem = smem_alloc.allocate_tensor(cute.Float32, smem_layout)
-    
-    _, N = input.shape
-    tidx, _, _ = cute.arch.thread_idx()
-    bidx, _, _ = cute.arch.block_idx()
-    bdimx, _, _ = cute.arch.block_dim()
-    lane_idx = cute.arch.lane_idx()
-    warp_idx = cute.arch.warp_idx()
-
-    max_iters = cute.ceil_div(N, bdimx)
-
-    acc = cute.Float32(0)
-    for i in range(max_iters):
-        idx = tidx + i * bdimx
-        if idx < N:
-            acc = acc + input[bidx, idx]
-    acc = cute.arch.warp_reduction_sum(acc) 
-    if lane_idx == 0:
-        shmem[warp_idx] = acc
-    cute.arch.sync_threads()
-    if warp_idx == 0:
-        acc = shmem[lane_idx] if lane_idx < num_warps else 0.0
-        acc = cute.arch.warp_reduction_sum(acc) 
-        if lane_idx == 0:
-            output[bidx] = acc
-
 
 @cute.kernel
-def reduce_sum_kernel_last(input: cute.Tensor, output: cute.Tensor, num_warps: int):
-    ROWS_PER_BLOCK = 4
-    WARPS_PER_ROW = num_warps // ROWS_PER_BLOCK
-    THREADS_PER_ROW = WARPS_PER_ROW * 32
-    
+def reduce_sum_kernel_last(input: cute.Tensor, output: cute.Tensor, tv_layout, num_warps: int):
     smem_alloc = cutlass.utils.SmemAllocator()
-    smem_layout = cute.make_layout((ROWS_PER_BLOCK, 32))
-    shmem = smem_alloc.allocate_tensor(cute.Float32, smem_layout)
-    
-    M, N = input.shape
+    shmem = smem_alloc.allocate_tensor(cute.Float32, cute.make_layout((32,)))
+
     tidx, _, _ = cute.arch.thread_idx()
     bidx, _, _ = cute.arch.block_idx()
-    lane_idx = cute.arch.lane_idx()
-    warp_idx = cute.arch.warp_idx()
+    lane = cute.arch.lane_idx()
+    warp = cute.arch.warp_idx()
 
-    block_row = warp_idx // WARPS_PER_ROW
-    warp_in_row = warp_idx % WARPS_PER_ROW
-    tid_in_row = tidx % THREADS_PER_ROW
+    # we want to load as float4
+    op = cute.nvgpu.CopyUniversalOp()
+    atom = cute.make_copy_atom(op, cute.Float32, num_bits_per_copy=128)
+    acc = cute.Float32(0.0)
 
-    og_row = bidx * ROWS_PER_BLOCK
-    row = og_row + block_row
+    _, mode1 = input.shape
+    ntiles = mode1[1]
 
-    max_iters = cute.ceil_div(N, THREADS_PER_ROW)
-    
-    acc = cute.Float32(0)
-    for i in range(max_iters):
-        col = tid_in_row + i * THREADS_PER_ROW
-        if col < N and row < M:
-            acc = acc + input[row, col]
+    for tile_idx in range(ntiles):
+        blk_coord = ((0, None), (bidx, tile_idx)) # all values in this [bidx, tile_idx] tile 
+        cta_tile = input[blk_coord]
+
+        thr_frag = cute.composition(cta_tile, tv_layout)
+        thr_src  = thr_frag[(tidx, None)]
+
+        # register memory for float4
+        r = cute.make_rmem_tensor(cute.make_layout((4,), stride=(1,)), cute.Float32)
+        # atom, src, dst
+        cute.copy(atom, thr_src, r)
+
+        acc += r[0] + r[1] + r[2] + r[3]
 
     acc = cute.arch.warp_reduction_sum(acc)
-
-    if lane_idx == 0:
-        shmem[block_row, warp_in_row] = acc
-    
+    if lane == 0:
+        shmem[warp] = acc
     cute.arch.sync_threads()
-    if warp_idx < ROWS_PER_BLOCK:
-        v = shmem[warp_idx, lane_idx] if lane_idx < WARPS_PER_ROW else 0.0
-        v = cute.arch.warp_reduction_sum(v)
-        if lane_idx == 0:
-            out_row = og_row + warp_idx
-            if out_row < M:
-                output[out_row] = v
 
-
-@cute.jit
-def _og_reduce_sum_last(x, output):
-    num_warps = 4
-    threads_per_block = 32 * num_warps
-    m, _ = x.shape
-    og_reduce_sum_kernel_last(x, output, num_warps
-    ).launch( grid=(m, 1, 1), block=(threads_per_block, 1, 1))
+    if warp == 0:
+        acc2 = shmem[lane] if lane < num_warps else 0.0
+        acc2 = cute.arch.warp_reduction_sum(acc2)
+        if lane == 0:
+            output[bidx] = acc2
 
 
 @cute.jit
 def _reduce_sum_last(x, output):
-    # num_warps = 4
-    # threads_per_block = 32 * num_warps
-    # m, _ = x.shape
-    # reduce_sum_kernel_last(x, output, num_warps
-    # ).launch( grid=(m, 1, 1), block=(threads_per_block, 1, 1))
-    num_warps = 32
-    ROWS_PER_BLOCK = 4
-    threads_per_block = 32 * num_warps
-    m, _ = x.shape
-    blocks = cute.ceil_div(m, ROWS_PER_BLOCK)
-    reduce_sum_kernel_last(x, output, num_warps
-    ).launch( grid=(blocks, 1, 1), block=(threads_per_block, 1, 1))
+    num_warps = 16
+    threads_per_block = 512
+    M, N = x.shape
+
+    tiler_mn = (1, 2048)
+    gX = cute.zipped_divide(x, tiler_mn)
+
+    thr_layout = cute.make_layout((threads_per_block,), stride=(1,))
+    val_layout = cute.make_layout((4,), stride=(1,))
+    _, tv_layout = cute.make_layout_tv(thr_layout, val_layout)
+    
+    reduce_sum_kernel_last(gX, output, tv_layout, num_warps).launch(
+        grid=(M, 1, 1),
+        block=(threads_per_block, 1, 1),
+    )
+
 
 
 @cute.kernel
@@ -189,7 +153,7 @@ def reduce_sum(x, dim=-1):
         if cache_key not in _reduce_sum_last_cache:
             print("compiling...")
             _reduce_sum_last_cache[cache_key] = cute.compile(
-                _og_reduce_sum_last, from_dlpack(x), from_dlpack(output)
+                _reduce_sum_last, from_dlpack(x, assumed_align=16), from_dlpack(output)
             )
         _reduce_sum_last_cache[cache_key](from_dlpack(x), from_dlpack(output))
     else:
@@ -290,5 +254,19 @@ def ncu_test():
     y = reduce_sum(x, dim=-1)
     torch.cuda.synchronize()
 
-benchmark()
+'''
+Correctness checks: against 4096x4096
+compiling...
+  dim=-1: ✓ PASS
+compiling...
+  dim= 0: ✓ PASS
+
+Benchmarks:
+  reduce_sum dim=-1: 0.043 ms
+  reduce_sum dim=0:  0.042 ms
+  torch.sum dim=-1:  0.011 ms
+  torch.sum dim=0:   0.019 ms
+'''
+
+# benchmark()
 # ncu_test()

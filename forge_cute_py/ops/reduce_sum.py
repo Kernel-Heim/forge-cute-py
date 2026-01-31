@@ -1,35 +1,39 @@
 import torch
+import cutlass.cute as cute
 
+from cutlass import BFloat16, Float16, Float32
+from cutlass.cute.runtime import from_dlpack
+
+from forge_cute_py.kernels.reduce_sum import _reduce_sum_last, _reduce_sum_first
+
+_compile_cache = {}
 
 @torch.library.custom_op("forge_cute_py::_reduce_sum", mutates_args={"out"})
-def _reduce_sum(x: torch.Tensor, out: torch.Tensor, dim: int = -1, variant: str = "shfl") -> None:
-    """Row/column sum reduction (reference implementation stub).
-
-    Args:
-        x: Input tensor of shape (M, N)
-        out: Output tensor (mutated in-place)
-        dim: Dimension to reduce over (-1, 0, or 1)
-        variant: Reduction variant (naive, improved, shfl) - currently unused
-    """
+def _reduce_sum(x: torch.Tensor, out: torch.Tensor, dim: int = -1) -> None:
+    """Sum reduction using CuTe DSL."""
     assert x.dim() == 2, "reduce_sum expects a 2D tensor"
     assert x.is_cuda, f"reduce_sum is CUDA-only, got device={x.device}"
-    assert dim in (-1, 0, 1), f"reduce_sum expects dim in {{-1, 0, 1}}, got {dim}"
-    assert x.dtype in [torch.float16, torch.bfloat16, torch.float32], (
-        f"Unsupported dtype: {x.dtype}"
-    )
 
-    # Normalize dim to positive index
     dim = dim if dim >= 0 else x.ndim + dim
 
-    # For now, use reference implementation
-    # Future: call kernel implementation based on variant when available
-    from forge_cute_py.ref import reduce_sum as reduce_sum_ref
+    dtype_map = {
+        torch.float16: Float16,
+        torch.float32: Float32,
+        torch.bfloat16: BFloat16,
+    }
+    cute_dtype = dtype_map[x.dtype]
+    
+    compile_key = (cute_dtype, dim, x.shape)
 
-    result = reduce_sum_ref(x, dim=dim)
-    out.copy_(result)
+    if compile_key not in _compile_cache:
+        jit_fn = _reduce_sum_last if dim == 1 else _reduce_sum_first
+        _compile_cache[compile_key] = cute.compile(
+            jit_fn,
+            from_dlpack(x, assumed_align=16),
+            from_dlpack(out),
+        )
 
-
-_reduce_sum.compile_cache = {}
+    _compile_cache[compile_key](from_dlpack(x), from_dlpack(out))
 
 
 def reduce_sum(x: torch.Tensor, dim: int = -1, variant: str = "shfl") -> torch.Tensor:
