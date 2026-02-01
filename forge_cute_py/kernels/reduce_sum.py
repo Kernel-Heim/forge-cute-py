@@ -13,7 +13,7 @@ class Reduction:
         self,
         dtype: Type[cutlass.Numeric],
         N: int,
-        reduction_dtype: Type[cutlass.Numeric] | None = None,
+        reduction_dtype: Type[cutlass.Numeric] | None = cutlass.Float32,
         reduction_op: Literal["sum", "amax", "amin", "prod"] = "sum",
         dim: int = -1,
     ):
@@ -24,9 +24,11 @@ class Reduction:
         self.dim = dim
 
         if self.dim not in (-1, 0, 1):
-            raise ValueError
+            raise ValueError(f"dim must be either -1, 0 or 1. Got: {self.dim}")
         if self.reduction_op not in ["sum", "amax", "amin", "prod"]:
-            raise ValueError
+            raise ValueError(
+                f"reduction_op must be either 'sum', 'amax', 'amin', 'prod'. Got: {self.reduction_dtype}"
+            )
 
         if self.dim not in [-1, 1]:
             raise NotImplementedError(f"Only support dim=1 or -1, got {self.dim}")
@@ -34,6 +36,10 @@ class Reduction:
             raise NotImplementedError(f"Only support reduction_op=sum, got {self.reduction_op}")
 
     def _get_tiled_copy(self, vecsize: int = 1):
+        """
+        Adapted from quack's tiles_copy_2d()
+        Reference: https://github.com/Dao-AILab/quack/blob/2e62faaeb6271a780a1360e6c96a003492e47eed/quack/copy_utils.py#L98
+        """
         threads_per_row = 32
         num_threads = 128
         num_blocks_N = cute.ceil_div(self.N // vecsize, threads_per_row)
@@ -77,7 +83,7 @@ class Reduction:
         bidx, _, _ = cute.arch.block_idx()
 
         gX = cute.local_tile(mX, tiler_mn, (bidx, 0))  # (tileM, tileN)
-        # TODO: vectorize store
+        # TODO: vectorized store
         # gO = cute.local_tile(mO, cute.select(tiler_mn, mode=[0]), (bidx,))  # (tileM,)
 
         thr_copy_X = tiled_copy.get_slice(tidx)
@@ -86,6 +92,7 @@ class Reduction:
         tXrX = cute.make_rmem_tensor_like(tXgX)
         cute.autovec_copy(tXgX, tXrX)
 
+        # reduce with higher precision for numerical stability
         x = tXrX.load().to(self.reduction_dtype)
         val = x.reduce(cute.ReductionOp.ADD, init_val=0.0, reduction_profile=0)
 
@@ -99,5 +106,6 @@ class Reduction:
         row_idx = warp_id // warps_per_row
         col_idx = warp_id % warps_per_row
 
+        # TODO: vetorized store
         if lane_id == 0 and col_idx == 0:
             mO[row_idx + tiler_mn[0] * bidx] = val.to(self.dtype)
