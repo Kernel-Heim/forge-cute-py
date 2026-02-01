@@ -8,7 +8,19 @@ from forge_cute_py.ref import reduce_sum as ref_reduce_sum
 @pytest.mark.parametrize(
     "shape, dim",
     [
+        # Small shapes
         ((4, 8), -1),
+        ((8, 4), -1),
+        ((3, 7), -1),  # non-power-of-2
+        ((1, 16), -1),  # single row
+        ((7, 1), -1),  # single column
+        # Medium shapes
+        ((32, 64), -1),
+        ((64, 128), -1),
+        # Large shapes
+        ((4096, 1024), 1),
+        ((1024, 4096), -1),
+        # Edge cases with dim=0 (handled via transpose)
         ((8, 4), 0),
     ],
 )
@@ -25,8 +37,8 @@ def test_reduce_sum_correctness(shape, dim, dtype, atol, rtol, variant):
     x = torch.randn(*shape, device="cuda", dtype=dtype)
     try:
         y = reduce_sum(x, dim=dim, variant=variant)
-    except NotImplementedError:
-        pytest.skip(f"reduce_sum variant {variant} not implemented")
+    except NotImplementedError as e:
+        pytest.skip(f"reduce_sum variant {variant} not implemented\n{e}")
     y_ref = ref_reduce_sum(x, dim=dim)
     torch.testing.assert_close(y, y_ref, atol=atol, rtol=rtol)
 
