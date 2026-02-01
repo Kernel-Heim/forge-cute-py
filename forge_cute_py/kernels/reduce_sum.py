@@ -52,14 +52,8 @@ class Reduction:
 
     @cute.jit
     def __call__(self, mX: cute.Tensor, mO: cute.Tensor, stream=None):
-        # if self.dtype != mX.element_type:
-        #     raise ValueError("dtype mismatch")
-
         vecsize = 128 // self.dtype.width
         tiler_mn, tiled_copy, threads_per_row = self._get_tiled_copy(vecsize=vecsize)
-
-        # print(f"[DSL INFO] mX: {mX}")
-        # print(f"[DSL INFO] mO: {mO}")
 
         num_threads = tiled_copy.size
 
@@ -79,27 +73,18 @@ class Reduction:
         threads_per_row: cutlass.Constexpr[int],
     ):
         # tv_layout = (thread_layout, value_layout) = ((threads_per_row, num_rows), vec_size)
-        # print(tiled_copy.layout_tv_tiled)
         tidx, _, _ = cute.arch.thread_idx()
         bidx, _, _ = cute.arch.block_idx()
-
-        # smem = cutlass.utils.SmemAllocator()
-        # sX = smem.allocate_tensor(self.dtype, cute.make_ordered_layout(tiler_mn, order=(1, 0)))
 
         gX = cute.local_tile(mX, tiler_mn, (bidx, 0))  # (tileM, tileN)
         # TODO: vectorize store
         # gO = cute.local_tile(mO, cute.select(tiler_mn, mode=[0]), (bidx,))  # (tileM,)
-        # print("gX.shape: ", gX.shape)
-        # print("gO.shape: ", gO.shape)
-        # print("tiler_mn: ", tiler_mn)
 
         thr_copy_X = tiled_copy.get_slice(tidx)
-        print(thr_copy_X)
         # gmem -> rmem
         tXgX = thr_copy_X.partition_S(gX)
         tXrX = cute.make_rmem_tensor_like(tXgX)
         cute.autovec_copy(tXgX, tXrX)
-        # print("tXrX: ", tXrX)
 
         x = tXrX.load().to(self.reduction_dtype)
         val = x.reduce(cute.ReductionOp.ADD, init_val=0.0, reduction_profile=0)
