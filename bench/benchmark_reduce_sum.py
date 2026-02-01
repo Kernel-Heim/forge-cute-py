@@ -23,17 +23,18 @@ def main():
 
     dtype = getattr(torch, args.dtype)
     x = torch.randn(args.m, args.n, device="cuda", dtype=dtype)
+    dim = args.dim
 
     def fn():
         return reduce_sum(x, dim=args.dim)
 
     times = do_bench(fn, warmup=args.warmup, rep=args.iterations)
     stats = summarize_times(times)
-    bytes_moved = 2 * x.numel() * x.element_size()
+    bytes_moved = (x.numel() + x.numel() / x.shape[dim]) * x.element_size()
     bw = estimate_bandwidth(bytes_moved, stats["p50_ms"])
     print(f"copy_transpose p50: {stats['p50_ms']:.4f} ms, BW: {bw:.2f} GB/s")
 
-    ref = lambda: ref_reduce_sum(x, dim=args.dim)
+    ref = lambda: ref_reduce_sum(x, dim=dim)
     if args.compile_ref and hasattr(torch, "compile"):
         ref = torch.compile(ref, fullgraph=True)
     ref_times = do_bench(ref, warmup=args.warmup, rep=args.iterations)
