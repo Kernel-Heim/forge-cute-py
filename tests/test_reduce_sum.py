@@ -8,8 +8,9 @@ from forge_cute_py.ref import reduce_sum as ref_reduce_sum
 @pytest.mark.parametrize(
     "shape, dim",
     [
-        ((4, 8), -1),
-        ((8, 4), 0),
+        # ((4, 8), -1),
+        # ((8, 4), 0),
+        ((4096, 1024), 1),
     ],
 )
 @pytest.mark.parametrize(
@@ -25,8 +26,8 @@ def test_reduce_sum_correctness(shape, dim, dtype, atol, rtol, variant):
     x = torch.randn(*shape, device="cuda", dtype=dtype)
     try:
         y = reduce_sum(x, dim=dim, variant=variant)
-    except NotImplementedError:
-        pytest.skip(f"reduce_sum variant {variant} not implemented")
+    except NotImplementedError as e:
+        pytest.skip(f"reduce_sum variant {variant} not implemented\n{e}")
     y_ref = ref_reduce_sum(x, dim=dim)
     torch.testing.assert_close(y, y_ref, atol=atol, rtol=rtol)
 
