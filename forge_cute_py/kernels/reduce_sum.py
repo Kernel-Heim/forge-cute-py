@@ -82,15 +82,15 @@ def reduce_sum_kernel_last(input: cute.Tensor, output: cute.Tensor, tv_layout, n
 
 @cute.jit
 def _reduce_sum_last(x, output):
-    num_warps = 16
-    threads_per_block = 512
+    num_warps = 8
+    threads_per_block = num_warps * 32
     M, N = x.shape
 
-    tiler_mn = (1, 2048)
-    gX = cute.zipped_divide(x, tiler_mn)
+    tiler_mn = (1, threads_per_block)
+    gX = cute.zipped_divide(x, tiler_mn) # [M, (x, threads_per_block)]
 
-    thr_layout = cute.make_layout((threads_per_block,), stride=(1,))
-    val_layout = cute.make_layout((4,), stride=(1,))
+    thr_layout = cute.make_layout((threads_per_block,), stride=(1,)) # single tile view
+    val_layout = cute.make_layout((4,), stride=(1,)) # vectorized float4
     _, tv_layout = cute.make_layout_tv(thr_layout, val_layout)
     
     reduce_sum_kernel_last(gX, output, tv_layout, num_warps).launch(
@@ -153,7 +153,9 @@ def reduce_sum(x, dim=-1):
         if cache_key not in _reduce_sum_last_cache:
             print("compiling...")
             _reduce_sum_last_cache[cache_key] = cute.compile(
-                _reduce_sum_last, from_dlpack(x, assumed_align=16), from_dlpack(output)
+                _reduce_sum_last, from_dlpack(x, assumed_align=16), from_dlpack(output),
+                cute.runtime.make_fake_stream(use_tvm_ffi_env_stream=True),
+                options="--enable-tvm-ffi",
             )
         _reduce_sum_last_cache[cache_key](from_dlpack(x), from_dlpack(output))
     else:

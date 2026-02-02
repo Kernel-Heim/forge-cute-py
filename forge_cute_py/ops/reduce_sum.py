@@ -65,5 +65,5 @@ def reduce_sum(x: torch.Tensor, dim: int = -1, variant: str = "shfl") -> torch.T
         raise ValueError(f"Invalid dim={dim} for 2D tensor")
 
     out = torch.empty(out_shape, dtype=x.dtype, device=x.device)
-    _reduce_sum(x, out, dim, variant)
+    _reduce_sum(x, out, dim)
     return out
