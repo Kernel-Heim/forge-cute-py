@@ -5,7 +5,6 @@ Row-wise sum reduction kernel using CuTe DSL (WIP).
 import operator
 from typing import Callable
 
-import cuda.bindings.driver as cuda
 import cutlass
 import cutlass.cute as cute
 from cutlass import const_expr
