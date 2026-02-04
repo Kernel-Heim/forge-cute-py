@@ -4,7 +4,6 @@ Placeholder kernel until we have proper benchmarking set up for B200.
 Source: https://github.com/Kernel-Heim/forge-cute-py/pull/27
 """
 
-import os
 import operator
 from typing import Callable
 
