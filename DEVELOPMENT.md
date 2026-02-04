@@ -39,7 +39,7 @@ This enables usage via both `forge_cute_py.op_name()` and
 | Op | Kernel | Status |
 |----|--------|--------|
 | `copy_transpose` | CuTe DSL | Fully implemented with tile-based shared memory |
-| `reduce_sum` | Reference | Stub using PyTorch reference (kernel TODO) |
+| `reduce_sum` | Reference | Placeholder (awaiting benchmarking) |
 | `softmax_online` | Reference | Stub with autograd support (kernel TODO) |
 
 ### Development flow

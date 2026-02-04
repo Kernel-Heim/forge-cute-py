@@ -84,16 +84,12 @@ def _bench_case(case, warmup: int, iterations: int):
         if not hasattr(ops, "reduce_sum"):
             return {"status": "skipped", "reason": "reduce_sum not available"}
         dim = case.get("dim", -1)
-        variant = case.get("variant", "shfl")
         x = torch.randn(*shape, device="cuda", dtype=dtype)
 
         def fn():
-            return ops.reduce_sum(x, dim=dim, variant=variant)
+            return ops.reduce_sum(x, dim=dim)
 
-        try:
-            times = do_bench(fn, warmup=warmup, rep=iterations)
-        except NotImplementedError:
-            return {"status": "skipped", "reason": f"variant {variant} not implemented"}
+        times = do_bench(fn, warmup=warmup, rep=iterations)
         stats = summarize_times(times)
         bytes_moved = _estimate_bytes(op_name, shape, dtype, dim=dim)
         bw = estimate_bandwidth(bytes_moved, stats["p50_ms"])
@@ -103,7 +99,6 @@ def _bench_case(case, warmup: int, iterations: int):
             "shape": shape,
             "dtype": str(dtype).replace("torch.", ""),
             "dim": dim,
-            "variant": variant,
             "times_ms": stats,
             "bandwidth_gbps": bw,
         }

@@ -106,7 +106,7 @@ ncu --set full -o profiles/copy_transpose uv run python bench/benchmark_copy_tra
 | Op | Status | Variants | Notes |
 | --- | --- | --- | --- |
 | copy_transpose | Implemented | tile_size=16/32 | CuTe DSL kernel with tiled shared memory |
-| reduce_sum | Stub (ref) | naive/improved/shfl | Uses PyTorch reference; kernel to be implemented |
+| reduce_sum | Stub (ref) | - | Placeholder (awaiting benchmarking) |
 | softmax_online | Stub (ref) | single-pass | Uses PyTorch reference with autograd support; kernel to be implemented |
 
 ---
