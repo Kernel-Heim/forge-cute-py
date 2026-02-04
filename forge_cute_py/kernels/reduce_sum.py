@@ -11,6 +11,7 @@ import cutlass
 import cutlass.cute as cute
 from cutlass import const_expr
 
+
 @cute.jit
 def block_reduce(
     val: cute.Numeric,

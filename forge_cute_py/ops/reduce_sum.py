@@ -9,7 +9,9 @@ _compile_cache = {}
 
 
 @torch.library.custom_op("forge_cute_py::_reduce_sum", mutates_args={"out"})
-def _reduce_sum(x: torch.Tensor, out: torch.Tensor, dim: int = -1, variant: str = "default") -> None:
+def _reduce_sum(
+    x: torch.Tensor, out: torch.Tensor, dim: int = -1, variant: str = "default"
+) -> None:
     """Row-wise sum reduction using CuTe DSL.
 
     Args:
