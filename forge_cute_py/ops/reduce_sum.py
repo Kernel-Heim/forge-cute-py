@@ -9,16 +9,13 @@ _compile_cache = {}
 
 
 @torch.library.custom_op("forge_cute_py::_reduce_sum", mutates_args={"out"})
-def _reduce_sum(
-    x: torch.Tensor, out: torch.Tensor, dim: int = -1, variant: str = "default"
-) -> None:
+def _reduce_sum(x: torch.Tensor, out: torch.Tensor, dim: int = -1) -> None:
     """Row-wise sum reduction using CuTe DSL.
 
     Args:
         x: Input tensor of shape (M, N)
         out: Output tensor (mutated in-place)
         dim: Dimension to reduce over (-1 or 1)
-        variant: Reduction variant (default only)
     """
     assert x.dim() == 2, "reduce_sum expects a 2D tensor"
     assert x.is_cuda, f"reduce_sum is CUDA-only, got device={x.device}"
@@ -28,9 +25,6 @@ def _reduce_sum(
     )
 
     dim = dim if dim >= 0 else x.ndim + dim
-
-    if variant not in ("default", ""):
-        raise NotImplementedError(f"reduce_sum variant {variant} not implemented")
 
     dtype_map = {
         torch.float16: Float16,
@@ -63,13 +57,12 @@ def _reduce_sum(
     _compile_cache[compile_key](x_cute, out_cute)
 
 
-def reduce_sum(x: torch.Tensor, dim: int = -1, variant: str = "default") -> torch.Tensor:
+def reduce_sum(x: torch.Tensor, dim: int = -1) -> torch.Tensor:
     """Row-wise sum reduction.
 
     Args:
         x: Input tensor of shape (M, N)
         dim: Dimension to reduce over (-1 for last dim, or 1)
-        variant: Reduction variant (default only)
 
     Returns:
         Reduced tensor of shape (M,)
@@ -100,5 +93,5 @@ def reduce_sum(x: torch.Tensor, dim: int = -1, variant: str = "default") -> torc
             "reduce_sum requires 16-byte aligned rows for vectorized loads. "
             f"Got data_ptr alignment={x.data_ptr() % 16} and row_stride_bytes={x.stride(0) * elem_bytes}."
         )
-    _reduce_sum(x, out, dim, variant)
+    _reduce_sum(x, out, dim)
     return out
