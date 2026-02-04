@@ -1,14 +1,16 @@
-"""
-Row-wise sum reduction kernel using CuTe DSL (WIP).
+"""Row-wise sum reduction kernel using CuTe DSL (WIP).
+
+Placeholder kernel until we have proper benchmarking set up for B200.
+Source: https://github.com/Kernel-Heim/forge-cute-py/pull/27
 """
 
+import os
 import operator
 from typing import Callable
 
 import cutlass
 import cutlass.cute as cute
 from cutlass import const_expr
-
 
 @cute.jit
 def block_reduce(
@@ -20,7 +22,7 @@ def block_reduce(
     """Block-wide reduction using warp shuffles + shared memory cross-warp step."""
     lane_idx = cute.arch.lane_idx()
     warp_idx = cute.arch.warp_idx()
-    num_warps = cute.size(reduction_buffer.shape[0])
+    num_warps = cute.size(reduction_buffer.shape)
 
     if lane_idx == 0:
         reduction_buffer[warp_idx] = val
@@ -56,7 +58,7 @@ def row_reduce(
         warp_op,
         threads_in_group=min(threads_per_row, cute.arch.WARP_SIZE),
     )
-    if const_expr(cute.size(reduction_buffer.shape[0]) > 1):
+    if const_expr(cute.size(reduction_buffer.shape) > 1):
         val = block_reduce(val, warp_op, reduction_buffer, init_val=init_val)
     return val
 

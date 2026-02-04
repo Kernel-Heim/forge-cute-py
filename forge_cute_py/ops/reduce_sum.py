@@ -38,11 +38,16 @@ def _reduce_sum(x: torch.Tensor, out: torch.Tensor, dim: int = -1, variant: str 
     cute_dtype = dtype_map[x.dtype]
     compile_key = (cute_dtype, dim)
 
+    vec_size = 128 // cute_dtype.width
     if compile_key not in _compile_cache:
         m = cute.sym_int()
-        n = cute.sym_int()
-        input_cute = cute.runtime.make_fake_compact_tensor(cute_dtype, (m, n), stride_order=(1, 0))
-        output_cute = cute.runtime.make_fake_compact_tensor(cute_dtype, (m,), stride_order=(0,))
+        n = cute.sym_int64(divisibility=vec_size)
+        input_cute = cute.runtime.make_fake_compact_tensor(
+            cute_dtype, (m, n), stride_order=(1, 0), assumed_align=16
+        )
+        output_cute = cute.runtime.make_fake_compact_tensor(
+            cute_dtype, (m,), stride_order=(0,), assumed_align=16
+        )
         kernel_class = ReduceSum(cute_dtype)
         _compile_cache[compile_key] = cute.compile(
             kernel_class,
@@ -51,8 +56,8 @@ def _reduce_sum(x: torch.Tensor, out: torch.Tensor, dim: int = -1, variant: str 
             options="--enable-tvm-ffi",
         )
 
-    x_cute = from_dlpack(x, assumed_align=1)
-    out_cute = from_dlpack(out, assumed_align=1)
+    x_cute = from_dlpack(x, assumed_align=16, enable_tvm_ffi=True)
+    out_cute = from_dlpack(out, assumed_align=16, enable_tvm_ffi=True)
     _compile_cache[compile_key](x_cute, out_cute)
 
 
@@ -81,5 +86,17 @@ def reduce_sum(x: torch.Tensor, dim: int = -1, variant: str = "default") -> torc
     out = torch.empty((x.shape[0],), dtype=x.dtype, device=x.device)
     if not x.is_contiguous():
         x = x.contiguous()
+    elem_bytes = x.element_size()
+    vec_size = 16 // elem_bytes
+    if x.shape[1] % vec_size != 0:
+        raise ValueError(
+            f"reduce_sum requires N divisible by {vec_size} for vectorized loads. "
+            f"Got N={x.shape[1]}."
+        )
+    if x.data_ptr() % 16 != 0 or (x.stride(0) * elem_bytes) % 16 != 0:
+        raise ValueError(
+            "reduce_sum requires 16-byte aligned rows for vectorized loads. "
+            f"Got data_ptr alignment={x.data_ptr() % 16} and row_stride_bytes={x.stride(0) * elem_bytes}."
+        )
     _reduce_sum(x, out, dim, variant)
     return out
