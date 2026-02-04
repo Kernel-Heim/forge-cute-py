@@ -39,9 +39,9 @@ Target: Harness infrastructure + Week 0-2 kernel implementations aligned to Kern
 
 ---
 
-## Week 1: Reductions (Sum)
+## Week 1: Reductions (Row-wise Sum)
 
-**Goal**: Multiple variants (naive → improved → shuffle) with correctness + benchmark coverage
+**Goal**: Row-wise sum kernel with correctness + benchmark coverage
 
 ### Infrastructure
 - [x] Test infrastructure (using PyTorch reference)
@@ -49,21 +49,11 @@ Target: Harness infrastructure + Week 0-2 kernel implementations aligned to Kern
 - [x] Ops registration and API design
 - [x] Benchmark integration
 
-### Kernel Implementations
-- [ ] **Naive variant**: Simple reduction without optimizations
+### Kernel Implementation
+- [ ] **Row-wise sum kernel**
   - [ ] CuTe DSL kernel implementation
   - [ ] Correctness tests vs PyTorch reference
   - [ ] Benchmark baseline
-
-- [ ] **Improved variant**: Optimized reduction with shared memory
-  - [ ] CuTe DSL kernel implementation
-  - [ ] Correctness tests vs PyTorch reference
-  - [ ] Benchmark comparison vs naive
-
-- [ ] **Shuffle variant**: Warp-level shuffle reduction
-  - [ ] CuTe DSL kernel implementation
-  - [ ] Correctness tests vs PyTorch reference
-  - [ ] Benchmark comparison vs improved
 
 - [ ] **Documentation**: Profiling notes and performance analysis
 

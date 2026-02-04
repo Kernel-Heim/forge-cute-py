@@ -7,7 +7,7 @@ For quickstart usage, see `README.md`.
 
 v0.1 targets KernelHeim Weeks 0-2:
 - Week 0: copy/transpose
-- Week 1: reductions (sum) variants
+- Week 1: reductions (row-wise sum)
 - Week 2: single-pass online softmax
 
 Out of scope for v0: FlashAttention kernels, KV-cache decode, FP8, NCCL, C++

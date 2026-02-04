@@ -9,7 +9,7 @@ from forge_cute_py.ref import reduce_sum as ref_reduce_sum
     "shape, dim",
     [
         ((4, 8), -1),
-        ((8, 4), 0),
+        ((8, 4), 1),
     ],
 )
 @pytest.mark.parametrize(
@@ -20,13 +20,9 @@ from forge_cute_py.ref import reduce_sum as ref_reduce_sum
         (torch.bfloat16, 1e-2, 1e-2),
     ],
 )
-@pytest.mark.parametrize("variant", ["naive", "improved", "shfl"])
-def test_reduce_sum_correctness(shape, dim, dtype, atol, rtol, variant):
+def test_reduce_sum_correctness(shape, dim, dtype, atol, rtol):
     x = torch.randn(*shape, device="cuda", dtype=dtype)
-    try:
-        y = reduce_sum(x, dim=dim, variant=variant)
-    except NotImplementedError:
-        pytest.skip(f"reduce_sum variant {variant} not implemented")
+    y = reduce_sum(x, dim=dim)
     y_ref = ref_reduce_sum(x, dim=dim)
     torch.testing.assert_close(y, y_ref, atol=atol, rtol=rtol)
 
@@ -50,7 +46,5 @@ def test_reduce_sum_torch_compile():
         y = compiled(x)
     except unsupported_exc as exc:
         pytest.skip(f"torch.compile unsupported for reduce_sum op: {exc}")
-    except NotImplementedError:
-        pytest.skip("reduce_sum shfl variant not implemented")
     y_ref = ref_reduce_sum(x, -1)
     torch.testing.assert_close(y, y_ref, atol=1e-2, rtol=1e-2)
