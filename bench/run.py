@@ -103,6 +103,31 @@ def _bench_case(case, warmup: int, iterations: int):
             "bandwidth_gbps": bw,
         }
 
+    if op_name == "reduce":
+        if not hasattr(ops, "reduce"):
+            return {"status": "skipped", "reason": "reduce not available"}
+        dim = case.get("dim", -1)
+        reduce_op = case.get("reduce_op", "sum")
+        x = torch.randn(*shape, device="cuda", dtype=dtype)
+
+        def fn():
+            return ops.reduce(x, dim=dim, op=reduce_op)
+
+        times = do_bench(fn, warmup=warmup, rep=iterations)
+        stats = summarize_times(times)
+        bytes_moved = _estimate_bytes(op_name, shape, dtype, dim=dim)
+        bw = estimate_bandwidth(bytes_moved, stats["p50_ms"])
+        return {
+            "status": "ok",
+            "op": op_name,
+            "shape": shape,
+            "dtype": str(dtype).replace("torch.", ""),
+            "dim": dim,
+            "reduce_op": reduce_op,
+            "times_ms": stats,
+            "bandwidth_gbps": bw,
+        }
+
     if op_name == "softmax_online":
         if not hasattr(ops, "softmax_online"):
             return {"status": "skipped", "reason": "softmax_online not available"}

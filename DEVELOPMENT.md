@@ -39,6 +39,7 @@ This enables usage via both `forge_cute_py.op_name()` and
 | Op | Kernel | Status |
 |----|--------|--------|
 | `copy_transpose` | CuTe DSL | Fully implemented with tile-based shared memory |
+| `reduce` | CuTe DSL | Placeholder (sum only) |
 | `reduce_sum` | Reference | Placeholder (awaiting benchmarking) |
 | `softmax_online` | Reference | Stub with autograd support (kernel TODO) |
 
@@ -126,6 +127,7 @@ non-zero tolerance in tests.
 ```bash
 uv run python bench/run.py --suite smoke
 uv run python bench/benchmark_copy_transpose.py --tile-size 16
+uv run python bench/benchmark_reduce.py
 ```
 
 Add new benchmark cases to `bench/suites.yaml` and keep outputs reproducible.

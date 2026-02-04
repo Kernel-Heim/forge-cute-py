@@ -106,6 +106,7 @@ ncu --set full -o profiles/copy_transpose uv run python bench/benchmark_copy_tra
 | Op | Status | Variants | Notes |
 | --- | --- | --- | --- |
 | copy_transpose | Implemented | tile_size=16/32 | CuTe DSL kernel with tiled shared memory |
+| reduce | Implemented (sum only) | - | Placeholder (awaiting benchmarking) |
 | reduce_sum | Stub (ref) | - | Placeholder (awaiting benchmarking) |
 | softmax_online | Stub (ref) | single-pass | Uses PyTorch reference with autograd support; kernel to be implemented |
 
@@ -149,6 +150,7 @@ uv run pre-commit run --all-files                     # Run linting/formatting
 uv run python bench/run.py --suite smoke              # Run benchmark suite
 uv run python bench/run.py --suite smoke --out out.json  # Save results
 uv run python bench/benchmark_copy_transpose.py       # Standalone benchmark
+uv run python bench/benchmark_reduce.py              # Standalone benchmark
 ```
 
 ### Profiling
