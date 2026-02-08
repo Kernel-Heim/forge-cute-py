@@ -5,13 +5,12 @@ from forge_cute_py.ops import reduce_sum
 from forge_cute_py.ref import reduce_sum as ref_reduce_sum
 
 
-@pytest.mark.parametrize(
-    "shape, dim",
-    [
-        ((4, 8), -1),
-        ((8, 4), 1),
-    ],
-)
+BASE_M = [128, 512, 2048]
+BASE_N = [128, 256, 1024, 2048, 4096, 8192]
+BASE_SHAPES = [(m, n) for m in BASE_M for n in BASE_N]
+
+
+@pytest.mark.parametrize("shape", BASE_SHAPES)
 @pytest.mark.parametrize(
     "dtype, atol, rtol",
     [
@@ -20,13 +19,20 @@ from forge_cute_py.ref import reduce_sum as ref_reduce_sum
         (torch.bfloat16, 1e-2, 1e-2),
     ],
 )
-def test_reduce_sum_correctness(shape, dim, dtype, atol, rtol):
+def test_reduce_sum_correctness(shape, dtype, atol, rtol):
     x = torch.randn(*shape, device="cuda", dtype=dtype)
-    y = reduce_sum(x, dim=dim)
-    y_ref = ref_reduce_sum(x, dim=dim)
+    y = reduce_sum(x, dim=-1)
+    y_ref = ref_reduce_sum(x, dim=-1)
     torch.testing.assert_close(y, y_ref, atol=atol, rtol=rtol)
 
     assert torch.isfinite(y).all()
+
+
+def test_reduce_sum_dim1_alias():
+    x = torch.randn(128, 256, device="cuda", dtype=torch.float16)
+    y = reduce_sum(x, dim=1)
+    y_ref = ref_reduce_sum(x, dim=1)
+    torch.testing.assert_close(y, y_ref, atol=1e-2, rtol=1e-2)
 
 
 def test_reduce_sum_torch_compile():

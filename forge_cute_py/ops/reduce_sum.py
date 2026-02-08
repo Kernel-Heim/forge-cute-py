@@ -19,6 +19,8 @@ def _reduce_sum(x: torch.Tensor, out: torch.Tensor, dim: int = -1) -> None:
 
     # Normalize dim to positive index
     dim = dim if dim >= 0 else x.ndim + dim
+    if dim != 1:
+        raise ValueError(f"reduce_sum supports dim in {{-1, 1}} (row-wise), got {dim}")
 
     # For now, use reference implementation
     # Future: call kernel implementation based on variant when available
@@ -36,7 +38,7 @@ def reduce_sum(x: torch.Tensor, dim: int = -1) -> torch.Tensor:
 
     Args:
         x: Input tensor of shape (M, N)
-        dim: Dimension to reduce over (-1 for last dim, 0 or 1)
+        dim: Dimension to reduce over (-1 for last dim, or 1)
 
     Returns:
         Reduced tensor of shape (M,) if dim=1 or (N,) if dim=0
@@ -50,13 +52,10 @@ def reduce_sum(x: torch.Tensor, dim: int = -1) -> torch.Tensor:
     # Normalize dim to positive index
     dim = dim if dim >= 0 else x.ndim + dim
 
-    # Determine output shape
-    if dim == 0:
-        out_shape = (x.shape[1],)
-    elif dim == 1:
-        out_shape = (x.shape[0],)
-    else:
-        raise ValueError(f"Invalid dim={dim} for 2D tensor")
+    if dim != 1:
+        raise ValueError(f"Invalid dim={dim} for row-wise reduce_sum")
+
+    out_shape = (x.shape[0],)
 
     out = torch.empty(out_shape, dtype=x.dtype, device=x.device)
     _reduce_sum(x, out, dim)

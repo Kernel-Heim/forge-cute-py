@@ -15,146 +15,123 @@ suites:
         shape: [256, 2048]
         dtype: float16
         dim: -1
-  reduce_short:
+  reduce_sum_short:
     warmup: 10
     iterations: 50
     cases:
-      - op: reduce
-        shape: [128, 256]
-        dtype: float16
-        dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [128, 1024]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [128, 2048]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [128, 4096]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [128, 8192]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
-        shape: [512, 256]
-        dtype: float16
-        dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [512, 1024]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [512, 2048]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [512, 4096]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [512, 8192]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
-        shape: [2048, 256]
-        dtype: float16
-        dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [2048, 1024]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [2048, 2048]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [2048, 4096]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [2048, 8192]
         dtype: float16
         dim: -1
-        reduce_op: sum
-  reduce_long:
+      - op: reduce_sum
+        shape: [8192, 1024]
+        dtype: float16
+        dim: -1
+      - op: reduce_sum
+        shape: [8192, 2048]
+        dtype: float16
+        dim: -1
+      - op: reduce_sum
+        shape: [8192, 4096]
+        dtype: float16
+        dim: -1
+      - op: reduce_sum
+        shape: [8192, 8192]
+        dtype: float16
+        dim: -1
+  reduce_sum_long:
     warmup: 10
     iterations: 50
     cases:
-      - op: reduce
+      - op: reduce_sum
         shape: [64, 16384]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [64, 32768]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [64, 65536]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [64, 131072]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [128, 16384]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [128, 32768]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [128, 65536]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [128, 131072]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [256, 16384]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [256, 32768]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [256, 65536]
         dtype: float16
         dim: -1
-        reduce_op: sum
-      - op: reduce
+      - op: reduce_sum
         shape: [256, 131072]
         dtype: float16
         dim: -1
-        reduce_op: sum
