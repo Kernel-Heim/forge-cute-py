@@ -20,7 +20,7 @@ def block_reduce(
     """Block-wide reduction using warp shuffles + shared memory cross-warp step."""
     lane_idx = cute.arch.lane_idx()
     warp_idx = cute.arch.warp_idx()
-    num_warps = cute.size(reduction_buffer.shape[0])
+    num_warps = cute.size(reduction_buffer)
 
     if lane_idx == 0:
         reduction_buffer[warp_idx] = val
@@ -56,7 +56,7 @@ def row_reduce(
         warp_op,
         threads_in_group=min(threads_per_row, cute.arch.WARP_SIZE),
     )
-    if const_expr(cute.size(reduction_buffer.shape[0]) > 1):
+    if const_expr(cute.size(reduction_buffer) > 1):
         val = block_reduce(val, warp_op, reduction_buffer, init_val=init_val)
     return val
 
@@ -132,12 +132,7 @@ class ReduceSumRow:
             tXgX = thr_copy.partition_S(gX)
             tXsX = thr_copy.partition_D(sX)
             tXrX = cute.make_fragment_like(tXgX)
-            tXpX = cute.make_fragment_like(tXgX, cutlass.Boolean)
-            base = cutlass.Int32(tile) * tile_n + cutlass.Int32(tidx) * vec_size
-            limit = cutlass.Int32(n_cols)
-            for v in cutlass.range_constexpr(tXpX.shape[0]):
-                tXpX[v] = cute.elem_less(base + v, limit)
-            cute.copy(copy_atom, tXgX, tXsX, pred=tXpX)
+            cute.copy(copy_atom, tXgX, tXsX)
             cute.arch.cp_async_commit_group()
             cute.arch.cp_async_wait_group(0)
             cute.arch.barrier()
