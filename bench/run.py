@@ -46,7 +46,7 @@ def _estimate_bytes(op: str, shape, dtype: torch.dtype, dim=None):
     numel = 1
     for dim_size in shape:
         numel *= dim_size
-    if op == "reduce_sum" and dim is not None:
+    if op in ("reduce_sum", "reduce") and dim is not None:
         out_numel = numel // shape[dim]
         return (numel + out_numel) * elem_size
     return 2 * numel * elem_size
@@ -154,6 +154,67 @@ def _bench_case(case, warmup: int, iterations: int):
     return {"status": "skipped", "reason": f"unknown op {op_name}"}
 
 
+def _format_shape(shape) -> str:
+    if not shape:
+        return "-"
+    return "x".join(str(dim) for dim in shape)
+
+
+def _fmt_num(val, fmt: str) -> str:
+    if val is None:
+        return "-"
+    if isinstance(val, (int, float)):
+        return format(val, fmt)
+    return str(val)
+
+
+def _print_table(results):
+    rows = []
+    for case in results.get("cases", []):
+        status = case.get("status", "")
+        if status != "ok":
+            rows.append(
+                {
+                    "op": case.get("op", "-"),
+                    "shape": _format_shape(case.get("shape", [])),
+                    "dtype": case.get("dtype", "-"),
+                    "dim": case.get("dim", "-"),
+                    "tile": case.get("tile_size", "-"),
+                    "p50_ms": "-",
+                    "bw": "-",
+                    "note": case.get("reason", "skipped"),
+                }
+            )
+            continue
+
+        times = case.get("times_ms", {})
+        rows.append(
+            {
+                "op": case.get("op", "-"),
+                "shape": _format_shape(case.get("shape", [])),
+                "dtype": case.get("dtype", "-"),
+                "dim": case.get("dim", "-"),
+                "tile": case.get("tile_size", "-"),
+                "p50_ms": _fmt_num(times.get("p50_ms"), "0.4f"),
+                "bw": _fmt_num(case.get("bandwidth_gbps"), "0.2f"),
+                "note": "",
+            }
+        )
+
+    header = (
+        f"{'op':<14} {'shape':<12} {'dtype':<8} {'dim':>4} {'tile':>4} "
+        f"{'p50 (ms)':>10} {'GB/s':>8}  {'note'}"
+    )
+    print(header)
+    print("-" * len(header))
+    for row in rows:
+        print(
+            f"{row['op']:<14} {row['shape']:<12} {row['dtype']:<8} "
+            f"{str(row['dim']):>4} {str(row['tile']):>4} {row['p50_ms']:>10} "
+            f"{row['bw']:>8}  {row['note']}"
+        )
+
+
 def main():
     parser = argparse.ArgumentParser(description="forge-cute-py benchmark runner")
     parser.add_argument("--suite", default="smoke")
@@ -192,6 +253,9 @@ def main():
         out_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
     else:
         print(json.dumps(results, indent=2))
+
+    print()
+    _print_table(results)
 
 
 if __name__ == "__main__":
