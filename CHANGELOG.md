@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0-rc2] - 2026-02-08
+
 ### Changed
 - Aligned `softmax_online` scaffold and backend wiring with issue #38 constraints (`dim=-1`, 2D row-wise) (#42)
 - Updated docs for current softmax backend usage and benchmark coverage notes (#43)
@@ -56,5 +58,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ruff configuration for linting and formatting (line-length=100)
 - Scripts for architecture detection and profiling setup
 
-[Unreleased]: https://github.com/Kernel-Heim/forge-cute-py/compare/v0.1.0-rc1...main
+[Unreleased]: https://github.com/Kernel-Heim/forge-cute-py/compare/v0.1.0-rc2...main
+[0.1.0-rc2]: https://github.com/Kernel-Heim/forge-cute-py/releases/tag/v0.1.0-rc2
 [0.1.0-rc1]: https://github.com/Kernel-Heim/forge-cute-py/releases/tag/v0.1.0-rc1
