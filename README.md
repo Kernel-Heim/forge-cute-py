@@ -108,8 +108,8 @@ ncu --set full -o profiles/copy_transpose uv run python bench/benchmark_copy_tra
 | Op | Status | Variants | Notes |
 | --- | --- | --- | --- |
 | copy_transpose | Implemented | tile_size=16/32 | CuTe DSL kernel with tiled shared memory |
-| reduce | Implemented (sum only) | - | Placeholder (awaiting benchmarking) |
-| reduce_sum | Stub (ref) | - | Placeholder (awaiting benchmarking) |
+| reduce | Implemented (sum only) | - | CuTe kernel with benchmark coverage |
+| reduce_sum | Stub (ref) | - | Reference path with benchmark coverage |
 | softmax_online | Implemented (registry) | ref, kernel | Default backend is `ref`; `kernel` is available for contributor benchmarking and remains non-production |
 
 ---

@@ -39,8 +39,8 @@ This enables usage via both `forge_cute_py.ops.op_name()` and
 | Op | Kernel | Status |
 |----|--------|--------|
 | `copy_transpose` | CuTe DSL | Fully implemented with tile-based shared memory |
-| `reduce` | CuTe DSL | Placeholder (sum only) |
-| `reduce_sum` | Reference | Placeholder (awaiting benchmarking) |
+| `reduce` | CuTe DSL | Implemented for sum with benchmark coverage |
+| `reduce_sum` | Reference | Stub/reference path with benchmark coverage |
 | `softmax_online` | Reference + CuTe backend | Backend-registry flow (`ref` default, `kernel` optional); row-wise `dim=-1` only |
 
 ### Development flow
