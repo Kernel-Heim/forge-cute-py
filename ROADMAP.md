@@ -23,7 +23,7 @@ Target: Harness infrastructure + Week 0-2 kernel implementations aligned to Kern
 - [x] Profiling documentation and helper scripts
 - [x] CI/CD with ruff linting and formatting
 - [x] Pre-commit hooks configuration
-- [x] Documentation (README, CONTRIBUTING, CLAUDE.md)
+- [x] Documentation (README, CONTRIBUTING, DEVELOPMENT)
 
 ### Copy/Transpose Kernel
 - [x] CuTe DSL kernel implementation (`forge_cute_py/kernels/copy_transpose.py`)

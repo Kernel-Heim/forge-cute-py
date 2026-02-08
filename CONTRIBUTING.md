@@ -86,7 +86,8 @@ A change that affects kernels or harness behavior should include:
 
 The project is currently in `v0.1.0` development:
 - Focused on harness stabilization and Week 0-2 kernel implementations
-- Not yet tagged - will be tagged when v0.1.0 milestones are complete
+- Release candidate tag exists: `v0.1.0-rc1`
+- Final `v0.1.0` tag is pending completion of remaining milestones
 - See [ROADMAP.md](ROADMAP.md) for detailed progress tracking
 
 ### Release process (for maintainers)
