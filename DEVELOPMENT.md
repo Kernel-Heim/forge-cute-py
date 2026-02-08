@@ -31,7 +31,7 @@ pattern:
 2. **Public API** (`op_name`): Allocates output tensor, calls internal op, returns
    result. For ops with autograd, wraps a `torch.autograd.Function`.
 
-This enables usage via both `forge_cute_py.op_name()` and
+This enables usage via both `forge_cute_py.ops.op_name()` and
 `torch.ops.forge_cute_py._op_name()`.
 
 ### Current implementation status (v0.1)
@@ -41,7 +41,7 @@ This enables usage via both `forge_cute_py.op_name()` and
 | `copy_transpose` | CuTe DSL | Fully implemented with tile-based shared memory |
 | `reduce` | CuTe DSL | Placeholder (sum only) |
 | `reduce_sum` | Reference | Placeholder (awaiting benchmarking) |
-| `softmax_online` | Reference | Stub with autograd support (kernel TODO) |
+| `softmax_online` | Reference | Stub with autograd support (kernel TODO, mode-gated via `FORGE_SOFTMAX_IMPL`) |
 
 ### Development flow
 
