@@ -82,11 +82,11 @@ A change that affects kernels or harness behavior should include:
 - **MINOR** (0.x.0): New functionality, backwards-compatible
 - **PATCH** (0.0.x): Backwards-compatible bug fixes
 
-### Version 0.1.0 (current)
+### Current version state
 
-The project is currently in `v0.1.0` development:
-- Focused on harness stabilization and Week 0-2 kernel implementations
-- Release candidate tag exists: `v0.1.0-rc1`
+The project is currently between RC and final `0.1.0`:
+- Latest pre-release tag: `v0.1.0-rc1`
+- `main` contains post-RC changes targeting the final `v0.1.0`
 - Final `v0.1.0` tag is pending completion of remaining milestones
 - See [ROADMAP.md](ROADMAP.md) for detailed progress tracking
 
@@ -96,7 +96,9 @@ When ready to create a release:
 
 1. **Update CHANGELOG.md**:
    - Move items from `[Unreleased]` to a new version section
-   - Add release date: `## [0.1.0] - YYYY-MM-DD`
+   - Use SemVer-compatible version heading:
+     - final release: `## [0.1.0] - YYYY-MM-DD`
+     - pre-release: `## [0.1.0-rc2] - YYYY-MM-DD`
    - Update compare links at bottom
 
 2. **Update version in pyproject.toml**:
